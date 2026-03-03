@@ -35,11 +35,8 @@ public class SecurityConfig {
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/auth/**").permitAll()
-                        .requestMatchers("/vote/**").hasRole("VOTER") 
-                        .requestMatchers("/elections/close/**").hasRole("ADMIN")  
-                        .anyRequest().authenticated()
-                )
+    .anyRequest().permitAll()
+)
                 .addFilterBefore(jwtAuthenticationFilter,
                         UsernamePasswordAuthenticationFilter.class);
 

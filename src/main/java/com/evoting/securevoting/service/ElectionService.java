@@ -19,7 +19,11 @@ public class ElectionService {
     @Autowired
     private UserRepository userRepository;
 
-    // Create Election (Admin Only)
+    public Election saveElection(Election election) {
+        return electionRepository.save(election);
+    }
+
+    // ✅ Create Election (Admin Only)
     public ResponseEntity<?> createElection(String adminEmail, Election election) {
 
         Optional<User> adminUser = userRepository.findByEmail(adminEmail);
@@ -42,35 +46,57 @@ public class ElectionService {
                 .body(savedElection);
     }
 
+    // ✅ Get All Elections
     public List<Election> getAllElections() {
         return electionRepository.findAll();
     }
-    public Election createElection(Election election) {
-    return electionRepository.save(election);
-}
-    public Election getElectionById(Long id) {
-    return electionRepository.findById(id).orElse(null);
-}
 
-public Election saveElection(Election election) {
-    return electionRepository.save(election);
-}
+    // ✅ Get Election By ID
+    public Election getElectionById(Long id) {
+        return electionRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Election not found"));
+    }
+
+    // ✅ Close Election
     public Election closeElection(Long electionId) {
 
-    Optional<Election> electionOpt = electionRepository.findById(electionId);
+        Election election = electionRepository.findById(electionId)
+                .orElseThrow(() -> new RuntimeException("Election not found"));
 
-    if (electionOpt.isEmpty()) {
-        throw new RuntimeException("Election not found");
+        if (election.getStatus() == ElectionStatus.CLOSED) {
+            throw new RuntimeException("Election is already closed");
+        }
+
+        election.setStatus(ElectionStatus.CLOSED);
+
+        return electionRepository.save(election);
     }
 
-    Election election = electionOpt.get();
+    // ✅ Declare Result (Modified to return Candidate)
+    public Candidate declareResult(Long electionId) {
 
-    if (election.getStatus() == ElectionStatus.CLOSED) {
-        throw new RuntimeException("Election is already closed");
+        Election election = electionRepository.findById(electionId)
+                .orElseThrow(() -> new RuntimeException("Election not found"));
+
+        if (election.getStatus() != ElectionStatus.CLOSED) {
+            throw new RuntimeException("Election must be CLOSED to declare result");
+        }
+
+        if (election.isResultDeclared()) {
+            throw new RuntimeException("Result already declared");
+        }
+
+        // 🔹 Find candidate with highest votes
+        Candidate winner = election.getCandidates().stream()
+                .max((c1, c2) -> Integer.compare(c1.getVoteCount(), c2.getVoteCount()))
+                .orElseThrow(() -> new RuntimeException("No candidates found"));
+
+        // 🔹 Update election
+        election.setWinner(winner);
+        election.setResultDeclared(true);
+        electionRepository.save(election);
+
+        // 🔹 Return only winner for controller to wrap in DTO
+        return winner;
     }
-
-    election.setStatus(ElectionStatus.CLOSED);
-
-    return electionRepository.save(election);
-}
 }

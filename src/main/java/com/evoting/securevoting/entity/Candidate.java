@@ -1,5 +1,7 @@
 package com.evoting.securevoting.entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+
 import jakarta.persistence.*;
 
 @Entity
@@ -17,8 +19,11 @@ public class Candidate {
     private int voteCount = 0;
 
     @ManyToOne
-    @JoinColumn(name = "election_id")
-    private Election election;
+@JoinColumn(name = "election_id")
+@JsonBackReference
+private Election election;
+
+    
 
     // Constructors
     public Candidate() {}

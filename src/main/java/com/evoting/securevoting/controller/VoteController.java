@@ -2,6 +2,7 @@ package com.evoting.securevoting.controller;
 
 import com.evoting.securevoting.service.VoteService;
 import com.evoting.securevoting.repository.UserRepository;
+import com.evoting.securevoting.security.JwtUtil;
 import com.evoting.securevoting.entity.User;
 import com.evoting.securevoting.dto.VoteRequest;
 import com.evoting.securevoting.entity.Role;
@@ -25,15 +26,25 @@ public class VoteController {
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+private JwtUtil jwtUtil;
+
 @PostMapping("/cast")
-public ResponseEntity<?> castVote(@RequestBody VoteRequest request) {
+public ResponseEntity<?> castVote(
+        @RequestHeader("Authorization") String token,
+        @RequestBody VoteRequest request) {
 
-    String email = SecurityContextHolder
-            .getContext()
-            .getAuthentication()
-            .getName();
+    try {
+        // 🔹 Extract email from JWT
+        String jwt = token.substring(7); // remove "Bearer "
+        String email = jwtUtil.extractEmail(jwt);
 
-    return voteService.castVote(email, request.getElectionId(), request.getCandidateId());
+        // 🔹 Call service
+        return voteService.castVote(email, request.getElectionId(), request.getCandidateId());
+
+    } catch (Exception e) {
+        return ResponseEntity.badRequest().body(e.getMessage());
+    }
 }
 
     @GetMapping("/check-voter")
