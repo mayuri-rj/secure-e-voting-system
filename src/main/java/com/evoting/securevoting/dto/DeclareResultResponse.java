@@ -11,7 +11,7 @@ public class DeclareResultResponse {
         this.winner = winner;
         this.message = message;
     }
-
+    
     // Getters & Setters
     public Candidate getWinner() {
         return winner;

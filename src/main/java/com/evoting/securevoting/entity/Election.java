@@ -4,8 +4,10 @@ import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import java.util.List;
 
+
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
+
 
 @Entity
 @Table(name = "elections")
@@ -15,12 +17,13 @@ public class Election {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(nullable = false, unique = true)
     private String title;
 
-    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm")
 private LocalDateTime startDate;
 
-@JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
+@JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm")
 private LocalDateTime endDate;
 
 

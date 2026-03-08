@@ -50,6 +50,7 @@ public class ElectionService {
     public List<Election> getAllElections() {
         return electionRepository.findAll();
     }
+    
 
     // ✅ Get Election By ID
     public Election getElectionById(Long id) {

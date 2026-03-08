@@ -16,6 +16,9 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+import com.evoting.securevoting.dto.CandidateDTO;
+
 
 import java.util.List;
 
@@ -30,6 +33,20 @@ public class CandidateController {
     @Autowired
     private JwtUtil jwtUtil;
 
+
+    
+    // this makes the full path /candidates/create
+   @PostMapping("/create/{electionId}")
+public ResponseEntity<?> createCandidate(@RequestBody Candidate candidate,
+                                         @PathVariable Long electionId) {
+    try {
+        CandidateDTO created = candidateService.createCandidate(candidate, electionId);
+        return ResponseEntity.ok(created);
+    } 
+    catch (RuntimeException e) {
+        return ResponseEntity.badRequest().body(e.getMessage());
+    }
+}
     // ✅ Add Candidate (Admin Only)
     @PostMapping("/add")
     public ResponseEntity<?> addCandidate(

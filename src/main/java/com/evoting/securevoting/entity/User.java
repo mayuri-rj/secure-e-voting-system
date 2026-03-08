@@ -1,5 +1,7 @@
 package com.evoting.securevoting.entity;
 
+import java.time.LocalDate;
+
 import jakarta.persistence.*;
 
 
@@ -27,6 +29,30 @@ public class User {
     @Enumerated(EnumType.STRING)   
     @Column(nullable = false)
     private Role role;
+
+    // inside User.java
+    @Column(nullable = false)
+    private LocalDate dob; // Date of birth
+
+    @Column(nullable = false)
+    private String residence; // e.g., city, district, constituency
+
+    // Getters and setters
+    public LocalDate getDob() {
+        return dob;
+    }
+
+    public void setDob(LocalDate dob) {
+        this.dob = dob;
+    }
+
+    public String getResidence() {
+        return residence;
+    }
+
+    public void setResidence(String residence) {
+        this.residence = residence;
+    }
 
     // Default Constructor
     public User() {}

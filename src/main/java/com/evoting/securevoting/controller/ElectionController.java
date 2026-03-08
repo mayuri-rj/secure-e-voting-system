@@ -15,11 +15,14 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController
 @RequestMapping("/elections")
 @CrossOrigin
+
+
 public class ElectionController {
 
     @Autowired
@@ -30,31 +33,55 @@ public class ElectionController {
 
     @Autowired
     private UserRepository userRepository;
+    
+
 
     // ✅ Create Election
    @PostMapping("/create")
 public ResponseEntity<?> createElection(@RequestBody Election election) {
     try {
-        // Optional: ensure default status if somehow null
-        if (election.getStatus() == null) {
-            election.setStatus(ElectionStatus.UPCOMING);
-        }
+
+        LocalDateTime now = LocalDateTime.now();
+
+if (now.isBefore(election.getStartDate())) {
+    election.setStatus(ElectionStatus.UPCOMING);
+} 
+ else if (now.isAfter(election.getEndDate())) {
+    election.setStatus(ElectionStatus.CLOSED);
+}
+else {
+    election.setStatus(ElectionStatus.ACTIVE);
+}
 
         Election savedElection = electionService.saveElection(election);
         return ResponseEntity.ok(savedElection);
+
     } catch (Exception e) {
-        e.printStackTrace(); // check console for real error
+        e.printStackTrace();
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                             .body("Error creating election: " + e.getMessage());
+                .body("Error creating election: " + e.getMessage());
     }
 }
-
     // ✅ Get All Elections
     @GetMapping("/all")
-    public List<Election> getAllElections() {
-        return electionService.getAllElections();
+public List<Election> getAllElections() {
+    List<Election> elections = electionService.getAllElections();
+    LocalDateTime now = LocalDateTime.now();
+
+    for (Election e : elections) {
+        if (e.getStartDate().isAfter(now)) {
+            e.setStatus(ElectionStatus.UPCOMING);
+        } else if (e.getEndDate().isBefore(now)) {
+            e.setStatus(ElectionStatus.CLOSED);
+        } else {
+            e.setStatus(ElectionStatus.ACTIVE);
+        }
     }
 
+    return elections;
+}
+    
+    
     // ✅ Close Election
     @PutMapping("/close/{id}")
 public ResponseEntity<?> closeElection(@PathVariable Long id,
@@ -87,9 +114,9 @@ public ResponseEntity<?> declareResult(
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
         if (user.getRole() != Role.ADMIN) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                    .body("Only ADMIN can declare result");
-        }
+    return ResponseEntity.status(HttpStatus.FORBIDDEN)
+            .body("Only ADMIN can declare result");
+}
 
         // 🔹 Call service to declare result (returns winner Candidate)
         Candidate winner = electionService.declareResult(id);
@@ -109,5 +136,13 @@ public ResponseEntity<?> declareResult(
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                              .body("Something went wrong");
     }
+    
 }
+
+// ✅ View Results
+@GetMapping("/results/{id}")
+public Election getElectionResults(@PathVariable Long id) {
+    return electionService.getElectionById(id);
+}
+    
 }

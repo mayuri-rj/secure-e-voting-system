@@ -1,6 +1,7 @@
 package com.evoting.securevoting.entity;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import jakarta.persistence.*;
 
@@ -20,10 +21,11 @@ public class Candidate {
 
     @ManyToOne
 @JoinColumn(name = "election_id")
+@JsonIgnoreProperties("candidates") // prevents infinite recursion
 @JsonBackReference
 private Election election;
 
-    
+   
 
     // Constructors
     public Candidate() {}
