@@ -11,6 +11,8 @@ import org.springframework.web.bind.annotation.*;
 import com.evoting.securevoting.entity.Role;
 import java.util.Map;
 import java.util.Optional;
+import java.time.LocalDate;
+import java.time.Period;
 
 @RestController
 @RequestMapping("/auth")
@@ -43,43 +45,71 @@ public class AuthController {
 
         String token = jwtUtil.generateToken(
                 user.getEmail(),
-                user.getRole().name()
-        );
+                user.getRole().name());
 
+        // ✅ FIX: Added fullName and city to login response
+        // Frontend needs these to display voter name and filter elections by city
         return ResponseEntity.ok(
                 Map.of(
-                        "token", token,
-                        "role", user.getRole().name()
-                )
-        );
+                        "token",    token,
+                        "role",     user.getRole().name(),
+                        "fullName", user.getFullName(),
+                        "city",     user.getCity() != null ? user.getCity() : ""
+                ));
     }
 
     // -------- REGISTER --------
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody Map<String, String> request) {
 
-        String fullName = request.get("fullName");
-        String email = request.get("email");
-        String password = request.get("password");
-        String role = request.get("role");
+        String fullName     = request.get("fullName");
+        String email        = request.get("email");
+        String password     = request.get("password");
+        String role         = request.get("role");
+        String aadhaarNumber = request.get("aadhaarNumber");
+        String gender       = request.get("gender");
 
-        // Check if email already exists
+        if (!aadhaarNumber.matches("\\d{12}")) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("message", "Aadhaar must be exactly 12 digits"));
+        }
+        if (userRepository.findByAadhaarNumber(aadhaarNumber).isPresent()) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("message", "Aadhaar already registered"));
+        }
+
+        String dobStr = request.get("dob");
+        LocalDate dob = LocalDate.parse(dobStr);
+        String city = request.get("city");
+
+        int age = Period.between(dob, LocalDate.now()).getYears();
+
+        if (age < 18) {
+            return ResponseEntity
+                    .status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("message", "You must be 18 or older to register for voting"));
+        }
+
         if (userRepository.findByEmail(email).isPresent()) {
             return ResponseEntity
                     .status(HttpStatus.BAD_REQUEST)
                     .body(Map.of("message", "Email already registered"));
         }
 
-        // Create new user
         User user = new User();
         user.setFullName(fullName);
         user.setEmail(email);
-        user.setPassword(passwordEncoder.encode(password)); // encrypt password
+        user.setPassword(passwordEncoder.encode(password));
+        user.setDob(dob);
+        user.setCity(city);
+        user.setAadhaarNumber(aadhaarNumber);
+        user.setGender(gender);
+
         if (role == null || role.isEmpty() || !role.equalsIgnoreCase("ADMIN")) {
-    user.setRole(Role.VOTER); // default to VOTER
-} else {
-    user.setRole(Role.ADMIN);
-}
+            user.setRole(Role.VOTER);
+        } else {
+            user.setRole(Role.ADMIN);
+        }
         user.setHasVoted(false);
 
         userRepository.save(user);

@@ -1,7 +1,7 @@
 package com.evoting.securevoting.entity;
 
 import jakarta.persistence.*;
-
+import java.time.LocalDate;
 
 @Entity
 
@@ -21,15 +21,45 @@ public class User {
     @Column(nullable = false)
     private String password;
 
-    @Column(nullable = false)
-    private boolean hasVoted = false;
+    @Column(name = "has_voted", nullable = false)
+    private Boolean hasVoted = false;
 
-    @Enumerated(EnumType.STRING)   
+    @Column(nullable = false)
+    private LocalDate dob; // date of birth
+
+    private String aadhaarNumber;
+
+    private boolean verified = false;
+
+    // getter & setter
+    public LocalDate getDob() {
+        return dob;
+    }
+
+    public void setDob(LocalDate dob) {
+        this.dob = dob;
+    }
+
+    @Column(nullable = false)
+    private String city;
+
+    private String gender;
+
+    public String getCity() {
+        return city;
+    }
+
+    public void setCity(String city) {
+        this.city = city;
+    }
+
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private Role role;
 
     // Default Constructor
-    public User() {}
+    public User() {
+    }
 
     // Getters & Setters
 
@@ -76,5 +106,28 @@ public class User {
     public void setRole(Role role) {
         this.role = role;
     }
-}
 
+    public String getAadhaarNumber() {
+        return aadhaarNumber;
+    }
+
+    public void setAadhaarNumber(String aadhaarNumber) {
+        this.aadhaarNumber = aadhaarNumber;
+    }
+
+    public boolean isVerified() {
+        return verified;
+    }
+
+    public void setVerified(boolean verified) {
+        this.verified = verified;
+    }
+
+    public String getGender() {
+        return gender;
+    }
+
+    public void setGender(String gender) {
+        this.gender = gender;
+    }
+}

@@ -4,10 +4,8 @@ import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import java.util.List;
 
-
 import com.fasterxml.jackson.annotation.JsonFormat;
-import com.fasterxml.jackson.annotation.JsonManagedReference;
-
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 @Entity
 @Table(name = "elections")
@@ -21,34 +19,36 @@ public class Election {
     private String title;
 
     @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm")
-private LocalDateTime startDate;
+    private LocalDateTime startDate;
 
-@JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm")
-private LocalDateTime endDate;
-
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm")
+    private LocalDateTime endDate;
 
     @Enumerated(EnumType.STRING)
-private ElectionStatus status = ElectionStatus.UPCOMING;
+    private ElectionStatus status = ElectionStatus.UPCOMING;
 
-    // 🔹 NEW: List of candidates for this election
-   @OneToMany(mappedBy = "election", cascade = CascadeType.ALL)
-@JsonManagedReference
-private List<Candidate> candidates;
+    // ✅ FIX: Replace @JsonManagedReference with @JsonIgnoreProperties
+    // @JsonManagedReference works with @JsonBackReference but suppresses fields
+    // @JsonIgnoreProperties breaks the loop cleanly while keeping all fields serialized
+    @OneToMany(mappedBy = "election", cascade = CascadeType.ALL)
+    @JsonIgnoreProperties({"election"})
+    private List<Candidate> candidates;
 
-    // 🔹 NEW: Winner of election
+    // ✅ FIX: winner field also needs to ignore election back-reference
+    // Without this, serializing winner → election → candidates → winner = infinite loop = 500
     @ManyToOne
     @JoinColumn(name = "winner_id")
+    @JsonIgnoreProperties({"election", "candidates"})
     private Candidate winner;
 
-    // 🔹 NEW: Flag to check if result declared
-   @Column(nullable = false)
-private boolean resultDeclared = false;
-    
-    
+    @Column(nullable = false)
+    private boolean resultDeclared = false;
+
+    @Column(nullable = false)
+    private String city;
 
     // Constructors
-    public Election() {
-    }
+    public Election() {}
 
     public Election(String title, LocalDateTime startDate, LocalDateTime endDate, ElectionStatus status) {
         this.title = title;
@@ -59,64 +59,29 @@ private boolean resultDeclared = false;
     }
 
     // Getters & Setters
+    public Long getId() { return id; }
 
-    public Long getId() {
-        return id;
-    }
+    public String getTitle() { return title; }
+    public void setTitle(String title) { this.title = title; }
 
-    public String getTitle() {
-        return title;
-    }
+    public LocalDateTime getStartDate() { return startDate; }
+    public void setStartDate(LocalDateTime startDate) { this.startDate = startDate; }
 
-    public void setTitle(String title) {
-        this.title = title;
-    }
+    public LocalDateTime getEndDate() { return endDate; }
+    public void setEndDate(LocalDateTime endDate) { this.endDate = endDate; }
 
-    public LocalDateTime getStartDate() {
-        return startDate;
-    }
+    public ElectionStatus getStatus() { return status; }
+    public void setStatus(ElectionStatus status) { this.status = status; }
 
-    public void setStartDate(LocalDateTime startDate) {
-        this.startDate = startDate;
-    }
+    public List<Candidate> getCandidates() { return candidates; }
+    public void setCandidates(List<Candidate> candidates) { this.candidates = candidates; }
 
-    public LocalDateTime getEndDate() {
-        return endDate;
-    }
+    public Candidate getWinner() { return winner; }
+    public void setWinner(Candidate winner) { this.winner = winner; }
 
-    public void setEndDate(LocalDateTime endDate) {
-        this.endDate = endDate;
-    }
+    public boolean isResultDeclared() { return resultDeclared; }
+    public void setResultDeclared(boolean resultDeclared) { this.resultDeclared = resultDeclared; }
 
-    public ElectionStatus getStatus() {
-        return status;
-    }
-
-    public void setStatus(ElectionStatus status) {
-        this.status = status;
-    }
-
-    public List<Candidate> getCandidates() {
-        return candidates;
-    }
-
-    public void setCandidates(List<Candidate> candidates) {
-        this.candidates = candidates;
-    }
-
-    public Candidate getWinner() {
-        return winner;
-    }
-
-    public void setWinner(Candidate winner) {
-        this.winner = winner;
-    }
-
-    public boolean isResultDeclared() {
-        return resultDeclared;
-    }
-
-    public void setResultDeclared(boolean resultDeclared) {
-        this.resultDeclared = resultDeclared;
-    }
+    public String getCity() { return city; }
+    public void setCity(String city) { this.city = city; }
 }

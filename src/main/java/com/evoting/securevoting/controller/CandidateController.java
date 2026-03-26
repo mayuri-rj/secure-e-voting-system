@@ -72,8 +72,4 @@ public ResponseEntity<?> createCandidate(@RequestBody Candidate candidate,
     public ResponseEntity<?> getCandidates(@PathVariable Long electionId) {
         return candidateService.getCandidatesByElection(electionId);
     }
-    @GetMapping("/test")
-public String test() {
-    return "CandidateController works!";
-}
 }
